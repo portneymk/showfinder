@@ -1,0 +1,14 @@
+{"success": true, "pagination": {"page": 1, "perPage": 100, "totalItems": 2, "totalPages": 1},
+ "events": [
+  {"@type": "Concert", "name": "Wednesday at Mississippi Studios", "identifier": "jambase:1",
+   "url": "https://www.jambase.com/show/1", "startDate": "2027-02-14T20:00:00", "doorTime": "2027-02-14T19:00:00",
+   "location": {"@type": "MusicVenue", "name": "Mississippi Studios", "address": {"addressLocality": "Portland", "addressRegion": "OR"}},
+   "performer": [{"@type": "MusicGroup", "name": "Wednesday", "x-isHeadliner": true}, {"@type": "MusicGroup", "name": "Hotline TNT", "x-isHeadliner": false}],
+   "offers": [{"@type": "Offer", "name": "Tickets", "url": "https://www.etix.com/ticket/p/1", "seller": {"name": "Etix"},
+               "validFrom": "2026-11-07T10:00:00-08:00", "availability": "InStock",
+               "priceSpecification": {"minPrice": 25, "maxPrice": 28, "priceCurrency": "USD"}}]},
+  {"@type": "Concert", "name": "Big Thief", "identifier": "jambase:2", "startDate": "2027-03-02T19:30:00",
+   "location": {"name": "Arlene Schnitzer Concert Hall", "address": {"addressLocality": "Portland"}},
+   "performer": {"name": "Big Thief"},
+   "offers": {"url": "https://www.portland5.com/x", "seller": {"name": "Portland'5"}, "price": 55}}
+ ]}

@@ -1,0 +1,29 @@
+{
+  "metro": "portland",
+  "timezone": "America/Los_Angeles",
+  "geo": {"lat": 45.5152, "lon": -122.6784, "radius_miles": 40},
+  "months_ahead": 6,
+  "venue_watchlist": [
+    "Mississippi Studios", "Holocene", "Wonder Ballroom", "Revolution Hall",
+    "Crystal Ballroom", "Roseland Theater", "Aladdin Theater", "Hawthorne Theatre",
+    "Alberta Rose Theatre", "Polaris Hall", "Doug Fir Lounge", "Star Theater",
+    "Dante's", "McMenamins Edgefield", "Arlene Schnitzer Concert Hall",
+    "Keller Auditorium", "Moda Center", "Theater of the Clouds",
+    "Veterans Memorial Coliseum", "Pioneer Courthouse Square", "Lan Su Chinese Garden",
+    "The Get Down", "Bossanova Ballroom", "Mano Oculta", "Kelly's Olympian",
+    "Showdown", "Turn! Turn! Turn!", "Bunk Bar", "The Fixin' To", "Lollipop Shoppe",
+    "Jack London Revue", "The Old Church", "Newmark Theatre", "Winningstad Theatre",
+    "RingSide Fish House", "Cascades Amphitheater", "Grand Lodge McMenamins",
+    "Alberta Abbey", "Thunderbird Hotel"
+  ],
+  "never_venues": [],
+  "never_artists": [],
+  "pollstar": {
+    "enabled": true,
+    "min_jambase_results": 25,
+    "search_urls": [
+      "https://www.pollstar.com/search/all/portland%20or"
+    ]
+  },
+  "ticketmaster": {"enabled": true, "classification": "music"}
+}

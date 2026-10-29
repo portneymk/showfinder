@@ -1,0 +1,10 @@
+{"_embedded": {"events": [
+  {"name": "Big Thief", "url": "https://www.ticketmaster.com/event/1",
+   "dates": {"start": {"localDate": "2027-03-02", "localTime": "19:30:00"}},
+   "sales": {"public": {"startDateTime": "2026-11-14T18:00:00Z"},
+             "presales": [{"name": "Artist Presale", "startDateTime": "2026-11-12T18:00:00Z", "endDateTime": "2026-11-13T06:00:00Z"},
+                          {"name": "Live Nation Presale", "startDateTime": "2026-11-13T18:00:00Z", "endDateTime": "2026-11-14T06:00:00Z"}]},
+   "priceRanges": [{"currency": "USD", "min": 49.5, "max": 89.5}],
+   "_embedded": {"venues": [{"name": "Arlene Schnitzer Concert Hall", "city": {"name": "Portland"}}],
+                 "attractions": [{"name": "Big Thief"}]}}
+]}, "page": {"size": 200, "totalElements": 1, "totalPages": 1, "number": 0}}
