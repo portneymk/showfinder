@@ -116,3 +116,29 @@ def test_cards_parse_and_taste_filter():
     assert len(numbering) == 1 and "1 more filtered out" in text and "post-punk" in text
     text_all, numbering_all = digest.build(shows, tz="America/Los_Angeles", today=dt.date(2026, 10, 28), include_filtered=True)
     assert len(numbering_all) == 2
+
+
+def test_rules_provider_and_thresholds():
+    from showfinder import taste
+    prov = taste.RulesProvider(yes_artists=["Protomartyr"], no_artists=["Gorillaz"], yes_venues=["Mississippi Studios"])
+    a = Show(artist="Protomartyr", venue="Aladdin Theater", show_date="2026-10-29")
+    b = Show(artist="Gorillaz", venue="Moda Center", show_date="2026-10-30")
+    c = Show(artist="Nobody", venue="Mississippi Studios", show_date="2026-11-01")
+    d = Show(artist="Somebody", support="Protomartyr", venue="Holocene", show_date="2026-11-02")
+    v = taste.score_rows([a, b, c, d], prov)
+    assert v[a.show_id]["taste"] == "yes" and v[b.show_id]["taste"] == "no"
+    assert v[c.show_id]["taste"] == "maybe" and v[d.show_id]["taste"] == "maybe"
+    assert "support act" in v[d.show_id]["taste_reason"]
+    a.taste = "no"
+    assert a.show_id not in taste.score_rows([a], prov)            # only_unscored skips it
+    assert a.show_id in taste.score_rows([a], prov, only_unscored=False)
+
+
+def test_jev_encode_decode():
+    from showfinder import taste
+    s = Show(artist="X", support="Y, Z", venue="V", city="Portland", show_date="2026-12-01", seller="eTix")
+    enc = taste.JevProvider.encode(s)
+    assert enc["support"] == ["Y", "Z"] and enc["seller"] == "eTix"
+    v = taste.JevProvider.decode({"p": 0.8, "reason": "r"})
+    assert v.label() == "yes" and v.provider == "jev"
+    assert taste.JevProvider.decode({"probability": 1.7}).p_want == 1.0
