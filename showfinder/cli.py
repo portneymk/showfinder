@@ -10,7 +10,7 @@ from .config import Config
 from .models import Show, SHEET_COLUMNS
 from . import merge, digest, decisions
 
-log = logging.getLogger("concert_desk")
+log = logging.getLogger("showfinder")
 
 
 def _load_rows(path: Path) -> list[Show]:
@@ -94,7 +94,7 @@ def cmd_rows_to_sheet(a) -> int:
 
 def main(argv=None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
-    p = argparse.ArgumentParser(prog="concert_desk")
+    p = argparse.ArgumentParser(prog="showfinder")
     sub = p.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("ingest"); s.add_argument("--config", default="config/portland.json"); s.add_argument("--out", default="out"); s.set_defaults(fn=cmd_ingest)
     s = sub.add_parser("digest"); s.add_argument("--config", default="config/portland.json"); s.add_argument("--rows", default="out/rows.json"); s.add_argument("--numbering", default="out/numbering.json"); s.set_defaults(fn=cmd_digest)

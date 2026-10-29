@@ -6,7 +6,7 @@ locally.
 
 ## How it works
 
-1. **Ingest** (`python -m concert_desk ingest`): pulls the next N months of
+1. **Ingest** (`python -m showfinder ingest`): pulls the next N months of
    shows for the configured metro. JamBase Data API v3 is the primary source
    (it aggregates Ticketmaster, Etix, TicketWeb, AXS, DICE and others). Pollstar
    is the fallback when JamBase fails or returns thin results. Ticketmaster's
@@ -21,9 +21,9 @@ locally.
    Sheets connector.
 4. **Decisions**: the owner answers the nightly digest in chat with shorthand
    (`x 1 3`, `go 2 buy`, `go 4 code floor max 80`, `never Moda Center`) or
-   flips the Status/Action dropdowns in the sheet. `python -m concert_desk
+   flips the Status/Action dropdowns in the sheet. `python -m showfinder
    decide` parses the shorthand against the numbered digest.
-5. **Digest** (`python -m concert_desk digest`): four sections, numbered.
+5. **Digest** (`python -m showfinder digest`): four sections, numbered.
    New shows by on-sale date; happening this week for GO shows; codes found;
    waiting on you.
 
@@ -50,8 +50,8 @@ Actions on a GO row: `buy_now`, `alert`, `find_code`, `watch_resale`.
 pip install -r requirements.txt
 export JAMBASE_API_KEY=...        # https://data.jambase.com (free Developer tier)
 export TICKETMASTER_API_KEY=...   # https://developer.ticketmaster.com (free)
-python -m concert_desk ingest --config config/portland.json --out out/
-python -m concert_desk digest --rows out/rows.json --decisions out/decisions.json
+python -m showfinder ingest --config config/portland.json --out out/
+python -m showfinder digest --rows out/rows.json --decisions out/decisions.json
 ```
 
 Network hosts the cloud environment must allow: `www.jambase.com`,
@@ -59,12 +59,12 @@ Network hosts the cloud environment must allow: `www.jambase.com`,
 
 ## Layout
 
-- `concert_desk/sources/jambase.py` — primary source
-- `concert_desk/sources/pollstar.py` — fallback (Playwright, JSON-LD extraction)
-- `concert_desk/sources/ticketmaster.py` — presale window enrichment only
-- `concert_desk/merge.py` — dedupe and row refresh
-- `concert_desk/decisions.py` — shorthand parser
-- `concert_desk/digest.py` — nightly digest text
+- `showfinder/sources/jambase.py` — primary source
+- `showfinder/sources/pollstar.py` — fallback (Playwright, JSON-LD extraction)
+- `showfinder/sources/ticketmaster.py` — presale window enrichment only
+- `showfinder/merge.py` — dedupe and row refresh
+- `showfinder/decisions.py` — shorthand parser
+- `showfinder/digest.py` — nightly digest text
 - `config/portland.json` — metro, radius, venue watchlist
 - `tests/` — offline tests (parser, merge, fixture-based source parsing)
 

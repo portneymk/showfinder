@@ -2,9 +2,9 @@ import datetime as dt
 import json
 from pathlib import Path
 
-from concert_desk.sources import jambase, ticketmaster, pollstar
-from concert_desk import merge, decisions, digest
-from concert_desk.models import Show, make_show_id
+from showfinder.sources import jambase, ticketmaster, pollstar
+from showfinder import merge, decisions, digest
+from showfinder.models import Show, make_show_id
 
 FX = Path(__file__).parent / "fixtures"
 
