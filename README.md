@@ -1,4 +1,4 @@
-# Concert Desk
+# Showfinder
 
 Nightly concert discovery, triage and presale tracking for Portland, run as a
 Claude Code scheduled task in the cloud. The laptop can be closed; nothing runs
