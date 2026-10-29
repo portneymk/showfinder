@@ -47,13 +47,16 @@ def cmd_ingest(a) -> int:
             tm = ticketmaster.parse_events(ticketmaster.fetch(cfg)); fresh.extend(tm); status["ticketmaster"] = len(tm)
         except Exception as e:  # noqa: BLE001
             log.error("ticketmaster failed: %s", e); status["ticketmaster"] = f"ERROR {e}"
+    return _finish_merge(cfg, fresh, out, status)
+
+
+def _finish_merge(cfg, fresh, out: Path, status: dict) -> int:
     fresh = merge.dedupe(fresh)
     fresh = merge.apply_filters(fresh, cfg.get("never_venues", []), cfg.get("never_artists", []))
     existing = _load_rows(out / "rows.json")
     rows, diff = merge.merge_into_existing(existing, fresh)
     _dump_rows(rows, out / "rows.json")
     diff["source_status"] = status
-    (out / "diff.json").write_text(json.dumps(diff, indent=1))
     watch = {v.lower() for v in cfg.get("venue_watchlist", [])}
     seen = {r.venue for r in rows if r.venue.lower() in watch}
     diff["watchlist_coverage"] = {"hit": sorted(seen), "missing": sorted(v for v in cfg.get("venue_watchlist", []) if v not in seen)}
@@ -63,11 +66,36 @@ def cmd_ingest(a) -> int:
     return 0
 
 
+def cmd_import_cards(a) -> int:
+    """Merge compact JamBase MCP cards (saved by the session) into rows.json."""
+    from .sources import jambase_cards
+    cfg = Config.load(a.config)
+    out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
+    cards = jambase_cards.load_dir(a.dir)
+    fresh = jambase_cards.parse_cards(cards)
+    return _finish_merge(cfg, fresh, out, {"jambase_mcp_cards": len(fresh)})
+
+
+def cmd_apply_taste(a) -> int:
+    """Apply {show_id: {"taste": "yes|no|maybe", "taste_reason": "..."}} to rows.json."""
+    rows = _load_rows(Path(a.rows))
+    verdicts = json.loads(Path(a.taste).read_text())
+    n = 0
+    for r in rows:
+        v = verdicts.get(r.show_id)
+        if v:
+            r.taste = v.get("taste", r.taste); r.taste_reason = v.get("taste_reason", r.taste_reason); n += 1
+    _dump_rows(rows, Path(a.rows))
+    print(json.dumps({"applied": n, "unmatched": len(set(verdicts) - {r.show_id for r in rows})}))
+    return 0
+
+
 def cmd_digest(a) -> int:
     cfg = Config.load(a.config)
     rows = _load_rows(Path(a.rows))
     text, numbering = digest.build(rows, tz=cfg.get("timezone", "America/Los_Angeles"),
-                                   regret_guard_days=int(cfg.get("regret_guard_days", 14)))
+                                   regret_guard_days=int(cfg.get("regret_guard_days", 14)),
+                                   include_filtered=a.all)
     Path(a.numbering).write_text(json.dumps(numbering, indent=1))
     print(text)
     return 0
@@ -97,7 +125,9 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="showfinder")
     sub = p.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("ingest"); s.add_argument("--config", default="config/portland.json"); s.add_argument("--out", default="out"); s.set_defaults(fn=cmd_ingest)
-    s = sub.add_parser("digest"); s.add_argument("--config", default="config/portland.json"); s.add_argument("--rows", default="out/rows.json"); s.add_argument("--numbering", default="out/numbering.json"); s.set_defaults(fn=cmd_digest)
+    s = sub.add_parser("digest"); s.add_argument("--config", default="config/portland.json"); s.add_argument("--rows", default="out/rows.json"); s.add_argument("--numbering", default="out/numbering.json"); s.add_argument("--all", action="store_true", help="include taste-filtered shows"); s.set_defaults(fn=cmd_digest)
+    s = sub.add_parser("import-cards"); s.add_argument("--config", default="config/portland.json"); s.add_argument("--dir", default="out/jambase_cards"); s.add_argument("--out", default="out"); s.set_defaults(fn=cmd_import_cards)
+    s = sub.add_parser("apply-taste"); s.add_argument("--rows", default="out/rows.json"); s.add_argument("--taste", default="out/taste.json"); s.set_defaults(fn=cmd_apply_taste)
     s = sub.add_parser("decide"); s.add_argument("--numbering", default="out/numbering.json"); s.add_argument("--reply", default="-"); s.set_defaults(fn=cmd_decide)
     s = sub.add_parser("rows-to-sheet"); s.add_argument("--rows", default="out/rows.json"); s.add_argument("--only-ids", default=""); s.add_argument("--header", action="store_true"); s.set_defaults(fn=cmd_rows_to_sheet)
     a = p.parse_args(argv)

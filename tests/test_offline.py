@@ -99,3 +99,20 @@ def test_pollstar_jsonld_extraction():
     evs = pollstar.extract_jsonld_events(html)
     shows = pollstar.parse_events(evs)
     assert shows[0].venue == "Doug Fir Lounge" and shows[0].source == "pollstar"
+
+
+def test_cards_parse_and_taste_filter():
+    from showfinder.sources import jambase_cards
+    cards = [{"id": "jambase:1", "title": "Protomartyr", "startDate": "2026-10-29T20:00:00", "venue": "Aladdin Theater",
+              "city": "Portland", "region": "OR", "performers": ["Protomartyr", "Accessory"],
+              "jambaseUrl": "https://www.jambase.com/show/x", "ticketUrl": "https://www.etix.com/ticket/p/1", "ticketLabel": "Tickets (eTix)"},
+             {"id": "jambase:1", "title": "dupe", "startDate": "2026-10-29T20:00:00", "venue": "Aladdin Theater", "performers": ["Protomartyr"]},
+             {"id": "jambase:2", "title": "X", "startDate": "2026-11-01T20:00:00", "venue": "Moda Center", "city": "Portland", "performers": ["X"]}]
+    shows = jambase_cards.parse_cards(cards)
+    assert len(shows) == 2 and shows[0].seller == "eTix" and shows[0].support == "Accessory"
+    shows[0].taste, shows[0].taste_reason = "yes", "post-punk you play a lot"
+    shows[1].taste = "no"
+    text, numbering = digest.build(shows, tz="America/Los_Angeles", today=dt.date(2026, 10, 28))
+    assert len(numbering) == 1 and "1 more filtered out" in text and "post-punk" in text
+    text_all, numbering_all = digest.build(shows, tz="America/Los_Angeles", today=dt.date(2026, 10, 28), include_filtered=True)
+    assert len(numbering_all) == 2

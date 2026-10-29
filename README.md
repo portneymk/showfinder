@@ -66,6 +66,8 @@ Network hosts the cloud environment must allow: `www.jambase.com`,
 - `showfinder/decisions.py` — shorthand parser
 - `showfinder/digest.py` — nightly digest text
 - `config/portland.json` — metro, radius, venue watchlist
+- `config/taste.md` — the taste profile the nightly session classifies against
+- `showfinder/sources/jambase_cards.py` — importer for JamBase MCP connector cards (discovery only; no on-sale dates)
 - `tests/` — offline tests (parser, merge, fixture-based source parsing)
 
 ## Verification status
