@@ -44,7 +44,7 @@ def build(rows: list[Show], *, tz: str, today: dt.date | None = None,
             existing = n
         out.append(f"{existing}. {line}")
 
-    all_new = [s for s in rows if s.status == "NEW"]
+    all_new = [s for s in rows if s.status == "NEW" and (not s.show_date or s.show_date >= today.isoformat())]
     if include_filtered:
         new = all_new
     else:

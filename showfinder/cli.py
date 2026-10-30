@@ -125,7 +125,9 @@ def cmd_score(a) -> int:
                                  batch_size=int(tcfg.get("jev", {}).get("batch_size", 8)))
     else:
         prov = taste.RulesProvider(tcfg.get("yes_artists", []), tcfg.get("no_artists", []),
-                                   tcfg.get("yes_venues", []), tcfg.get("no_venues", []))
+                                   tcfg.get("yes_venues", []), tcfg.get("no_venues", []),
+                                   maybe_artists=tcfg.get("maybe_artists", []),
+                                   no_patterns=tcfg.get("no_patterns"))
     verdicts = taste.score_rows(rows, prov, yes_at=tcfg.get("yes_at", 0.6), no_below=tcfg.get("no_below", 0.25),
                                 only_unscored=not a.rescore)
     Path(a.out).write_text(json.dumps(verdicts, indent=1))

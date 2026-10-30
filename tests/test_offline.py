@@ -127,7 +127,14 @@ def test_rules_provider_and_thresholds():
     d = Show(artist="Somebody", support="Protomartyr", venue="Holocene", show_date="2026-11-02")
     v = taste.score_rows([a, b, c, d], prov)
     assert v[a.show_id]["taste"] == "yes" and v[b.show_id]["taste"] == "no"
-    assert v[c.show_id]["taste"] == "maybe" and v[d.show_id]["taste"] == "maybe"
+    assert v[c.show_id]["taste"] == "no" and "venue you like" in v[c.show_id]["taste_reason"]
+    assert v[d.show_id]["taste"] == "maybe"
+    e = Show(artist="Zoso - The Ultimate Led Zeppelin Tribute", venue="Aladdin Theater", show_date="2026-11-03")
+    f = Show(artist="moe.", venue="Crystal Ballroom", show_date="2026-11-04")
+    prov2 = taste.RulesProvider(maybe_artists=["moe."])
+    v2 = taste.score_rows([e, f], prov2)
+    assert v2[e.show_id]["taste"] == "no" and "format" in v2[e.show_id]["taste_reason"]
+    assert v2[f.show_id]["taste"] == "maybe"
     assert "support act" in v[d.show_id]["taste_reason"]
     a.taste = "no"
     assert a.show_id not in taste.score_rows([a], prov)            # only_unscored skips it

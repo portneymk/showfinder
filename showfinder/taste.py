@@ -52,11 +52,18 @@ class Provider(Protocol):
 class RulesProvider:
     name = "rules"
 
-    def __init__(self, yes_artists=(), no_artists=(), yes_venues=(), no_venues=()):
+    # Formats the profile says no to regardless of artist (matched on the headliner text).
+    NO_PATTERNS = ("tribute", "symphony", "orchestra", "dance party", "worship", "drag ", "a cappella",
+                   "the music of ", "celebrating ", "plays ", "experience", "glow night", "halloween", "ball ")
+
+    def __init__(self, yes_artists=(), no_artists=(), yes_venues=(), no_venues=(), maybe_artists=(),
+                 no_patterns=None):
         self.ya = {normalize(a) for a in yes_artists}
         self.na = {normalize(a) for a in no_artists}
+        self.ma = {normalize(a) for a in maybe_artists}
         self.yv = {normalize(v) for v in yes_venues}
         self.nv = {normalize(v) for v in no_venues}
+        self.no_patterns = tuple(p.lower() for p in (no_patterns if no_patterns is not None else self.NO_PATTERNS))
 
     def score(self, show: Show) -> Verdict:
         acts = [normalize(show.artist)] + [normalize(x) for x in show.support.split(",") if x.strip()]
@@ -64,13 +71,19 @@ class RulesProvider:
             return Verdict(0.02, f"{show.artist} is on the no list", self.name)
         if acts[0] in self.ya:
             return Verdict(0.95, f"{show.artist} is on the yes list", self.name)
+        if acts[0] in self.ma:
+            return Verdict(0.50, f"{show.artist} fits a scene you like", self.name)
         hit = [a for a in acts[1:] if a in self.ya]
         if hit:
             return Verdict(0.55, f"support act {hit[0]} is on the yes list", self.name)
+        low = f" {show.artist.lower()} "
+        pat = next((p for p in self.no_patterns if p in low), None)
+        if pat:
+            return Verdict(0.05, f"format you said no to ({pat.strip()})", self.name)
         if normalize(show.venue) in self.nv:
             return Verdict(0.05, f"{show.venue} is on the avoid list", self.name)
         if normalize(show.venue) in self.yv:
-            return Verdict(0.35, f"unknown act at {show.venue}, a venue you like", self.name)
+            return Verdict(0.20, f"unknown act at {show.venue}, a venue you like; no scene match", self.name)
         return Verdict(0.15, "no signal in the profile", self.name)
 
 
