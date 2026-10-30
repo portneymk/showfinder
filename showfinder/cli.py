@@ -97,7 +97,8 @@ def cmd_score(a) -> int:
     rows = _load_rows(Path(a.rows))
     tcfg = cfg.get("taste", {})
     if a.provider == "jev":
-        prov = taste.JevProvider()
+        prov = taste.JevProvider(Path(a.profile).read_text(), model=tcfg.get("jev", {}).get("model", "jev-latest"),
+                                 batch_size=int(tcfg.get("jev", {}).get("batch_size", 8)))
     else:
         prov = taste.RulesProvider(tcfg.get("yes_artists", []), tcfg.get("no_artists", []),
                                    tcfg.get("yes_venues", []), tcfg.get("no_venues", []))
@@ -146,7 +147,7 @@ def main(argv=None) -> int:
     s = sub.add_parser("ingest"); s.add_argument("--config", default="config/portland.json"); s.add_argument("--out", default="out"); s.set_defaults(fn=cmd_ingest)
     s = sub.add_parser("digest"); s.add_argument("--config", default="config/portland.json"); s.add_argument("--rows", default="out/rows.json"); s.add_argument("--numbering", default="out/numbering.json"); s.add_argument("--all", action="store_true", help="include taste-filtered shows"); s.set_defaults(fn=cmd_digest)
     s = sub.add_parser("import-cards"); s.add_argument("--config", default="config/portland.json"); s.add_argument("--dir", default="out/jambase_cards"); s.add_argument("--out", default="out"); s.set_defaults(fn=cmd_import_cards)
-    s = sub.add_parser("score"); s.add_argument("--config", default="config/portland.json"); s.add_argument("--rows", default="out/rows.json"); s.add_argument("--provider", choices=["rules", "jev"], default="rules"); s.add_argument("--out", default="out/taste.json"); s.add_argument("--rescore", action="store_true"); s.set_defaults(fn=cmd_score)
+    s = sub.add_parser("score"); s.add_argument("--config", default="config/portland.json"); s.add_argument("--rows", default="out/rows.json"); s.add_argument("--provider", choices=["rules", "jev"], default="rules"); s.add_argument("--profile", default="config/taste.md"); s.add_argument("--out", default="out/taste.json"); s.add_argument("--rescore", action="store_true"); s.set_defaults(fn=cmd_score)
     s = sub.add_parser("apply-taste"); s.add_argument("--rows", default="out/rows.json"); s.add_argument("--taste", default="out/taste.json"); s.set_defaults(fn=cmd_apply_taste)
     s = sub.add_parser("decide"); s.add_argument("--numbering", default="out/numbering.json"); s.add_argument("--reply", default="-"); s.set_defaults(fn=cmd_decide)
     s = sub.add_parser("rows-to-sheet"); s.add_argument("--rows", default="out/rows.json"); s.add_argument("--only-ids", default=""); s.add_argument("--header", action="store_true"); s.set_defaults(fn=cmd_rows_to_sheet)

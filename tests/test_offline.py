@@ -134,11 +134,27 @@ def test_rules_provider_and_thresholds():
     assert a.show_id in taste.score_rows([a], prov, only_unscored=False)
 
 
-def test_jev_encode_decode():
+def test_jev_payload_and_batch_parse():
     from showfinder import taste
-    s = Show(artist="X", support="Y, Z", venue="V", city="Portland", show_date="2026-12-01", seller="eTix")
-    enc = taste.JevProvider.encode(s)
-    assert enc["support"] == ["Y", "Z"] and enc["seller"] == "eTix"
-    v = taste.JevProvider.decode({"p": 0.8, "reason": "r"})
-    assert v.label() == "yes" and v.provider == "jev"
-    assert taste.JevProvider.decode({"probability": 1.7}).p_want == 1.0
+    a = Show(artist="Protomartyr", support="Accessory", venue="Aladdin Theater", city="Portland", show_date="2026-10-29")
+    b = Show(artist="Gorillaz", venue="Moda Center", city="Portland", show_date="2026-10-30")
+    seen = {}
+
+    def fake(payload):
+        seen.update(payload)
+        assert payload["model"] == "jev-latest" and "taste_profile" in payload["state"]
+        q = payload["questions"]
+        assert q[f"want_{a.show_id}"]["type"] == "noul" and q[f"why_{a.show_id}"]["type"] == "choice"
+        assert q[f"want_{a.show_id}"]["instructions"]["show"]["support"] == ["Accessory"]
+        return {"model": "jev-1.13.0", "answers": {
+            f"want_{a.show_id}": {"type": "noul", "noul": 0.91},
+            f"why_{a.show_id}": {"type": "choice", "choice": "artist", "probabilities": {"artist": 0.9}, "confidence": 0.88},
+            f"want_{b.show_id}": {"type": "noul", "noul": 0.07},
+            f"why_{b.show_id}": {"type": "choice", "choice": "no_signal", "confidence": 0.7},
+        }, "usage": {"input_tokens": 1, "output_tokens": 1}}
+
+    prov = taste.JevProvider("PROFILE", api_key="x", transport=fake, batch_size=8)
+    v = taste.score_rows([a, b], prov)
+    assert v[a.show_id]["taste"] == "yes" and "artist matches" in v[a.show_id]["taste_reason"] and "p=0.91" in v[a.show_id]["taste_reason"]
+    assert v[b.show_id]["taste"] == "no"
+    assert len(seen["questions"]) == 4

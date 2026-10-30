@@ -69,7 +69,9 @@
     "yes_venues": [],
     "no_venues": [],
     "jev": {
-      "note": "set JEV_ENDPOINT and JEV_API_KEY as environment variables; DGX must be reachable from the cloud and its host allowed in network policy"
+      "model": "jev-latest",
+      "batch_size": 8,
+      "note": "TypeSafe System One. Key via TYPESAFE_API_KEY env var or a network secret for api.typesafe.ai"
     }
   }
-}
+}\n
