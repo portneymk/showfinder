@@ -158,3 +158,26 @@ def test_jev_payload_and_batch_parse():
     assert v[a.show_id]["taste"] == "yes" and "artist matches" in v[a.show_id]["taste_reason"] and "p=0.91" in v[a.show_id]["taste_reason"]
     assert v[b.show_id]["taste"] == "no"
     assert len(seen["questions"]) == 4
+
+
+def test_cross_metro_propagation():
+    from showfinder import apply as apply_mod
+    from showfinder.decisions import Decision
+    pdx = Show(artist="Gorillaz", venue="Moda Center", show_date="2026-10-30", metro="portland")
+    sea = Show(artist="Gorillaz", venue="Climate Pledge Arena", show_date="2026-10-28", metro="seattle")
+    eug = Show(artist="Gorillaz", venue="Hult Center", show_date="2027-06-01", metro="eugene")   # outside window
+    other = Show(artist="Beck", venue="Keller Auditorium", show_date="2026-11-10", metro="portland")
+    rows = [pdx, sea, eug, other]
+    changed, never = apply_mod.apply(rows, [Decision(show_id=pdx.show_id, status="SKIP")])
+    assert sea.status == "SKIP" and "closed via portland" in sea.notes
+    assert eug.status == "NEW" and other.status == "NEW"
+    assert {r.show_id for r in changed} == {pdx.show_id, sea.show_id}
+    changed, never = apply_mod.apply(rows, [Decision(show_id=other.show_id, status="NEVER")])
+    assert other.status == "NEVER" and never == ["Beck"]
+    # a new Beck date in Bend inherits NEVER on ingest
+    bend = Show(artist="Beck", venue="Hayden Homes Amphitheater", show_date="2027-08-01", metro="bend", source="jambase")
+    merged, diff = merge.merge_into_existing(rows, [bend])
+    assert bend.status == "NEVER" and bend.show_id in diff["auto_closed"]
+    # bare 'never <venue>' closes every show at that venue
+    changed, never = apply_mod.apply(rows, [], ["Moda Center"])
+    assert pdx.status == "NEVER"

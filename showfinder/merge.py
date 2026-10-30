@@ -41,7 +41,30 @@ def apply_filters(shows: Iterable[Show], never_venues: list[str], never_artists:
     return [s for s in shows if normalize(s.venue) not in nv and normalize(s.artist) not in na]
 
 
-def merge_into_existing(existing: list[Show], fresh: list[Show]) -> tuple[list[Show], dict]:
+def _inherit_artist_decision(f: Show, existing: list[Show], window_days: int) -> None:
+    """A NEVER on an artist anywhere, or a SKIP on the same artist within `window_days`,
+    closes a newly seen show for that artist in every metro."""
+    key = normalize(f.artist)
+    try:
+        fd = dt.date.fromisoformat(f.show_date)
+    except ValueError:
+        return
+    for e in existing:
+        if normalize(e.artist) != key or e.status not in ("SKIP", "NEVER"):
+            continue
+        if e.status == "NEVER":
+            f.status, f.notes = "NEVER", f"closed: artist marked never ({e.metro or 'home'} {e.show_date})"
+            return
+        try:
+            ed = dt.date.fromisoformat(e.show_date)
+        except ValueError:
+            continue
+        if abs((fd - ed).days) <= window_days:
+            f.status, f.notes = "SKIP", f"closed via {e.metro or 'home'} {e.show_date} decision"
+            return
+
+
+def merge_into_existing(existing: list[Show], fresh: list[Show], *, skip_window_days: int = 180) -> tuple[list[Show], dict]:
     """Return (all rows, diff). Decision fields on existing rows are preserved."""
     now = _now()
     by_id = {s.show_id: s for s in existing}
@@ -49,6 +72,7 @@ def merge_into_existing(existing: list[Show], fresh: list[Show]) -> tuple[list[S
     for f in fresh:
         cur = by_id.get(f.show_id)
         if cur is None:
+            _inherit_artist_decision(f, existing, skip_window_days)
             f.first_seen = f.last_updated = now
             by_id[f.show_id] = f
             new_rows.append(f)
@@ -58,12 +82,15 @@ def merge_into_existing(existing: list[Show], fresh: list[Show]) -> tuple[list[S
             if v and v != getattr(cur, k):
                 changes[k] = (getattr(cur, k), v)
                 setattr(cur, k, v)
+        if f.metro and not cur.metro:
+            cur.metro = f.metro
         if changes:
             cur.last_updated = now
             changed_rows.append((cur, changes))
     rows = sorted(by_id.values(), key=lambda s: (s.soonest_action_at, s.show_date))
     diff = {
         "new": [s.show_id for s in new_rows],
+        "auto_closed": [s.show_id for s in new_rows if s.status in ("SKIP", "NEVER")],
         "changed": {s.show_id: {k: list(v) for k, v in ch.items()} for s, ch in changed_rows},
     }
     return rows, diff

@@ -54,7 +54,7 @@ def _finish_merge(cfg, fresh, out: Path, status: dict) -> int:
     fresh = merge.dedupe(fresh)
     fresh = merge.apply_filters(fresh, cfg.get("never_venues", []), cfg.get("never_artists", []))
     existing = _load_rows(out / "rows.json")
-    rows, diff = merge.merge_into_existing(existing, fresh)
+    rows, diff = merge.merge_into_existing(existing, fresh, skip_window_days=int(cfg.get("skip_propagation_days", 180)))
     _dump_rows(rows, out / "rows.json")
     diff["source_status"] = status
     watch = {v.lower() for v in cfg.get("venue_watchlist", [])}
@@ -73,7 +73,31 @@ def cmd_import_cards(a) -> int:
     out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
     cards = jambase_cards.load_dir(a.dir)
     fresh = jambase_cards.parse_cards(cards)
-    return _finish_merge(cfg, fresh, out, {"jambase_mcp_cards": len(fresh)})
+    for f in fresh:
+        f.metro = a.metro
+    return _finish_merge(cfg, fresh, out, {f"jambase_mcp_cards:{a.metro}": len(fresh)})
+
+
+def cmd_apply_decisions(a) -> int:
+    """Apply decide output (JSON) to rows.json with cross-metro propagation; print changed rows."""
+    from . import apply as apply_mod
+    from .decisions import Decision
+    cfg = Config.load(a.config)
+    rows = _load_rows(Path(a.rows))
+    data = json.loads(Path(a.decisions).read_text())
+    decs = []
+    for d in data.get("decisions", []):
+        dec = Decision(show_id=d["show_id"], status=d.get("status", ""), action=d.get("action", ""),
+                       seat_pref=d.get("seat_pref", ""), max_price=d.get("max_price", ""),
+                       companions=d.get("companions", ""), note=d.get("notes_append", ""))
+        decs.append(dec)
+    changed, new_never = apply_mod.apply(rows, decs, data.get("never_names", []),
+                                         window_days=int(cfg.get("skip_propagation_days", 180)))
+    _dump_rows(rows, Path(a.rows))
+    print(json.dumps({"changed": [{"show_id": r.show_id, "artist": r.artist, "metro": r.metro, "show_date": r.show_date,
+                                   "status": r.status, "action": r.action, "notes": r.notes} for r in changed],
+                      "new_never": new_never}, indent=1))
+    return 0
 
 
 def cmd_apply_taste(a) -> int:
@@ -146,7 +170,8 @@ def main(argv=None) -> int:
     sub = p.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("ingest"); s.add_argument("--config", default="config/portland.json"); s.add_argument("--out", default="out"); s.set_defaults(fn=cmd_ingest)
     s = sub.add_parser("digest"); s.add_argument("--config", default="config/portland.json"); s.add_argument("--rows", default="out/rows.json"); s.add_argument("--numbering", default="out/numbering.json"); s.add_argument("--all", action="store_true", help="include taste-filtered shows"); s.set_defaults(fn=cmd_digest)
-    s = sub.add_parser("import-cards"); s.add_argument("--config", default="config/portland.json"); s.add_argument("--dir", default="out/jambase_cards"); s.add_argument("--out", default="out"); s.set_defaults(fn=cmd_import_cards)
+    s = sub.add_parser("import-cards"); s.add_argument("--config", default="config/portland.json"); s.add_argument("--dir", default="out/jambase_cards/portland"); s.add_argument("--metro", default="portland"); s.add_argument("--out", default="out"); s.set_defaults(fn=cmd_import_cards)
+    s = sub.add_parser("apply-decisions"); s.add_argument("--config", default="config/portland.json"); s.add_argument("--rows", default="out/rows.json"); s.add_argument("--decisions", default="out/decisions.json"); s.set_defaults(fn=cmd_apply_decisions)
     s = sub.add_parser("score"); s.add_argument("--config", default="config/portland.json"); s.add_argument("--rows", default="out/rows.json"); s.add_argument("--provider", choices=["rules", "jev"], default="rules"); s.add_argument("--profile", default="config/taste.md"); s.add_argument("--out", default="out/taste.json"); s.add_argument("--rescore", action="store_true"); s.set_defaults(fn=cmd_score)
     s = sub.add_parser("apply-taste"); s.add_argument("--rows", default="out/rows.json"); s.add_argument("--taste", default="out/taste.json"); s.set_defaults(fn=cmd_apply_taste)
     s = sub.add_parser("decide"); s.add_argument("--numbering", default="out/numbering.json"); s.add_argument("--reply", default="-"); s.set_defaults(fn=cmd_decide)

@@ -63,7 +63,8 @@ def build(rows: list[Show], *, tz: str, today: dt.date | None = None,
         why = f" · _{s.taste_reason}_" if s.taste_reason else ""
         support = f" w/ {s.support}" if s.support else ""
         when_txt = f" · {tag} {_local(when, tz)}" if when else ""
-        item(s, f"**{s.artist}**{support} — {s.venue}, {_date(s.show_date)}{when_txt}{price}{why}")
+        where = f"{s.venue}" + (f" ({s.metro.title()})" if s.metro and s.metro != "portland" else "")
+        item(s, f"**{s.artist}**{support} — {where}, {_date(s.show_date)}{when_txt}{price}{why}")
 
     out.append("")
     out.append("**This week for your GO shows**")

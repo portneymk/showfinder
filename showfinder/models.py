@@ -12,7 +12,7 @@ SHEET_COLUMNS = [
     "onsale_at", "presale_at", "presale_name", "ticket_url", "seller",
     "price_range", "source", "status", "action", "companions", "max_price",
     "seat_pref", "code", "code_source", "code_status", "notes", "first_seen",
-    "last_updated", "calendar_event_id", "taste", "taste_reason",
+    "last_updated", "calendar_event_id", "taste", "taste_reason", "metro",
 ]
 
 _STRIP_WORDS = {"the", "a", "an", "and", "&", "at", "presents", "live"}
@@ -64,6 +64,7 @@ class Show:
     calendar_event_id: str = ""
     taste: str = ""                 # yes / no / maybe, set by the taste filter
     taste_reason: str = ""
+    metro: str = ""                 # portland / seattle / eugene / bend
     show_id: str = field(default="")
 
     def __post_init__(self):

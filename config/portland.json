@@ -73,5 +73,33 @@
       "batch_size": 8,
       "note": "TypeSafe System One. Key via TYPESAFE_API_KEY env var or a network secret for api.typesafe.ai"
     }
-  }
+  },
+  "metros": {
+    "portland": {
+      "lat": 45.5152,
+      "lon": -122.6784,
+      "radius_miles": 40,
+      "label": "Portland, OR"
+    },
+    "seattle": {
+      "lat": 47.6062,
+      "lon": -122.3321,
+      "radius_miles": 35,
+      "label": "Seattle, WA"
+    },
+    "eugene": {
+      "lat": 44.0521,
+      "lon": -123.0868,
+      "radius_miles": 30,
+      "label": "Eugene, OR"
+    },
+    "bend": {
+      "lat": 44.0582,
+      "lon": -121.3153,
+      "radius_miles": 30,
+      "label": "Bend, OR"
+    }
+  },
+  "home_metro": "portland",
+  "skip_propagation_days": 180
 }
