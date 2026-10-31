@@ -188,3 +188,12 @@ def test_cross_metro_propagation():
     # bare 'never <venue>' closes every show at that venue
     changed, never = apply_mod.apply(rows, [], ["Moda Center"])
     assert pdx.status == "NEVER"
+
+
+def test_digest_numbering_is_stable_across_runs():
+    rows = [Show(show_id=f"s{i}", artist=f"A{i}", venue="V", show_date=f"2026-12-0{i}", status="NEW", taste="yes") for i in (1, 3)]
+    _, first = digest.build(rows, tz="America/Los_Angeles", today=dt.date(2026, 10, 29))
+    assert first == {1: "s1", 2: "s3"}
+    rows.insert(1, Show(show_id="s2", artist="A2", venue="V", show_date="2026-12-02", status="NEW", taste="yes"))
+    _, second = digest.build(rows, tz="America/Los_Angeles", today=dt.date(2026, 10, 29), prior=first)
+    assert second[1] == "s1" and second[2] == "s3" and second[3] == "s2"

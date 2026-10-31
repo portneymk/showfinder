@@ -28,20 +28,26 @@ def _date(d: str) -> str:
 
 def build(rows: list[Show], *, tz: str, today: dt.date | None = None,
           regret_guard_days: int = 14, horizon_days: int = 7,
-          include_filtered: bool = False) -> tuple[str, dict[int, str]]:
+          include_filtered: bool = False, prior: dict[int, str] | None = None) -> tuple[str, dict[int, str]]:
+    """`prior` is the previous run's numbering: a show keeps the number the owner last saw,
+    and shows seen for the first time get fresh numbers after the highest one ever issued."""
     today = today or dt.datetime.now(ZoneInfo(tz)).date()
     week = today + dt.timedelta(days=horizon_days)
+    prior = dict(prior or {})
+    keep: dict[str, int] = {v: k for k, v in prior.items()}
     numbering: dict[int, str] = {}
-    n = 0
+    n = max(prior, default=0)
     out: list[str] = []
 
     def item(s: Show, line: str) -> None:
         nonlocal n
         existing = next((k for k, v in numbering.items() if v == s.show_id), None)
         if existing is None:
-            n += 1
-            numbering[n] = s.show_id
-            existing = n
+            existing = keep.get(s.show_id)
+            if existing is None:
+                n += 1
+                existing = n
+            numbering[existing] = s.show_id
         out.append(f"{existing}. {line}")
 
     all_new = [s for s in rows if s.status == "NEW" and (not s.show_date or s.show_date >= today.isoformat())]

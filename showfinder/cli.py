@@ -139,9 +139,12 @@ def cmd_score(a) -> int:
 def cmd_digest(a) -> int:
     cfg = Config.load(a.config)
     rows = _load_rows(Path(a.rows))
+    prior = {}
+    if Path(a.numbering).exists():
+        prior = {int(k): v for k, v in json.loads(Path(a.numbering).read_text()).items()}
     text, numbering = digest.build(rows, tz=cfg.get("timezone", "America/Los_Angeles"),
                                    regret_guard_days=int(cfg.get("regret_guard_days", 14)),
-                                   include_filtered=a.all)
+                                   include_filtered=a.all, prior=prior)
     Path(a.numbering).write_text(json.dumps(numbering, indent=1))
     print(text)
     return 0
