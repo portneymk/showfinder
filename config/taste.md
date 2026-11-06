@@ -104,3 +104,4 @@ Iron Maiden, Matchbox Twenty, Leon Bridges.
 ## Log of corrections
 (The owner's overrides in chat get appended here so the filter learns.)
 - 2026-11-04 (nightly, by the profile's own scene rules, not an owner reply): Sage Francis -> maybe (underground hip-hop, scene yes); The Chats -> maybe (punk, scene yes). Owner can overrule with `no <artist>`.
+- 2026-11-05 (nightly, by the profile's own scene rules, not an owner reply): Rahzel -> maybe (golden-age hip-hop); Bone Thugs-N-Harmony -> maybe (90s hip-hop). Owner can overrule with `no <artist>`.
