@@ -106,3 +106,4 @@ Iron Maiden, Matchbox Twenty, Leon Bridges.
 - 2026-11-04 (nightly, by the profile's own scene rules, not an owner reply): Sage Francis -> maybe (underground hip-hop, scene yes); The Chats -> maybe (punk, scene yes). Owner can overrule with `no <artist>`.
 - 2026-11-05 (nightly, by the profile's own scene rules, not an owner reply): Rahzel -> maybe (golden-age hip-hop); Bone Thugs-N-Harmony -> maybe (90s hip-hop). Owner can overrule with `no <artist>`.
 - 2026-11-09 (nightly, by the profile's own scene rules, not an owner reply): Grieves -> maybe (underground hip-hop); Silversun Pickups -> maybe (00s alt rock). Owner can overrule with `no <artist>`.
+- 2026-11-10 (nightly, by the profile's own scene rules, not an owner reply): Clutch -> maybe (stoner hard rock); North Mississippi Allstars -> maybe (jam/blues-rock); Trampled by Turtles -> maybe (jamgrass). Owner can overrule with `no <artist>`.
